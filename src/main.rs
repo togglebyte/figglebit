@@ -16,5 +16,5 @@ fn main() {
     let mut stdout = init().unwrap();
     let _ = stdout.execute(Print(buf));
 
-    cleanup();
+    cleanup(&mut stdout);
 }

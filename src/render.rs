@@ -7,7 +7,9 @@ use crossterm::event::EnableMouseCapture;
 use crossterm::event::DisableMouseCapture;
 
 use crossterm::cursor;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType};
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use crossterm::{execute, ExecutableCommand, Result};
 
 use crate::smushing::{get_horizontal_smush_len, horizontal_smush};
@@ -16,6 +18,7 @@ use crate::Font;
 fn raw_mode() -> Result<Stdout> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
+    stdout.execute(EnterAlternateScreen)?;
     execute!(stdout, DisableMouseCapture,)?;
     stdout.execute(cursor::Hide)?;
     stdout.execute(Clear(ClearType::All))?;
@@ -76,7 +79,9 @@ pub fn init() -> Result<Stdout> {
     Ok(raw_mode()?)
 }
 
-pub fn cleanup() {
+pub fn cleanup(stdout: &mut Stdout) {
+    stdout.execute(cursor::Show).unwrap();
+    stdout.execute(LeaveAlternateScreen).unwrap();
     let _ = disable_raw_mode();
 }
 
@@ -94,7 +99,7 @@ mod test {
     #[test]
     fn full_horizontal() {
         let mut buf = Vec::new();
-        let renderer = Renderer::new(&mut buf, font());
+        let renderer = Renderer::new(font());
         let s = String::from_utf8(buf).unwrap();
         let expected = r#"
    ______
