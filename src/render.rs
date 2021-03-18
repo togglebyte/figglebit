@@ -26,7 +26,7 @@ fn raw_mode() -> Result<Stdout> {
 }
 
 // struct CharData {
-    // offset: usize,
+// offset: usize,
 // }
 
 pub struct Renderer {
@@ -44,18 +44,23 @@ impl Renderer {
         let line_count = self.font.header.height as usize;
         let mut bytes_written = 0;
 
-        let mut overlap = 10_000;
+        let mut overlap;
         let mut output = vec!["".to_string(); line_count];
 
         for (_idx, c) in chars.enumerate() {
             // TODO: in case of full width: just write each line, no need to do anything else
 
-            // overlap = 10_000;
-            for row in 0..line_count {
+            overlap = 10_000;
+            for (row, _val) in output.iter().enumerate().take(line_count) {
                 let next_overlap =
                     get_horizontal_smush_len(&output[row], &c.lines[row], &self.font.header);
                 overlap = overlap.min(next_overlap);
             }
+            // for row in 0..line_count {
+            //     let next_overlap =
+            //         get_horizontal_smush_len(&output[row], &c.lines[row], &self.font.header);
+            //     overlap = overlap.min(next_overlap);
+            // }
 
             output = horizontal_smush(&output, &c.lines, overlap, &self.font.header);
 

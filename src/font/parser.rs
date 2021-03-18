@@ -2,7 +2,7 @@ use super::character::Char;
 use super::{Font, Header};
 use super::{ParseErr, Result};
 
-const SIGNATURE: &'static str = "flf2";
+const SIGNATURE: &str = "flf2";
 
 // -----------------------------------------------------------------------------
 //     - Parsing-
@@ -14,7 +14,7 @@ fn parse_header(src: &str) -> Result<Header> {
 
     let mut skip = SIGNATURE.len() + 1;
 
-    let hard_blank: char = *&src[skip..skip + 1].as_bytes()[0] as char;
+    let hard_blank: char = src[skip..skip + 1].as_bytes()[0] as char;
     skip += 2;
 
     let values = src[skip..]

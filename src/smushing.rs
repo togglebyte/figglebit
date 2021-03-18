@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use crate::font::{OldLayout, Header};
+use crate::font::{Header, OldLayout};
 
 // -----------------------------------------------------------------------------
 //     - Smush rules -
@@ -9,9 +9,7 @@ use crate::font::{OldLayout, Header};
 // Right has to be set
 // Do not call this function in the event of right not being set
 fn uni_smush(left: char, right: char, hard_blank: char) -> char {
-    if right == ' ' {
-        left
-    } else if right == hard_blank && left == ' ' {
+    if right == ' ' || right == hard_blank && left == ' ' {
         left
     } else {
         right
@@ -45,7 +43,7 @@ fn horz_smush_2(left: char, right: char, _hard_blank: char) -> Option<char> {
         return Some(left);
     }
 
-    return None;
+    None
 }
 
 // function hRule3_Smush(ch1, ch2) {
@@ -117,23 +115,19 @@ fn horz_smush_4(left: char, right: char, _hard_blank: char) -> Option<char> {
 // }
 fn horz_smush_5(left: char, right: char, _hard_blank: char) -> Option<char> {
     let rule = "/\\ \\/ ><";
-    match (rule.find(left), rule.find(right)) {
-        (Some(left_idx), Some(right_idx)) => {
-            if (left_idx as isize - right_idx as isize).abs() <= 1 {
-                if right_idx - left_idx == 1 {
-                    return match left_idx {
-                        0 => Some('|'),
-                        3 => Some('Y'),
-                        6 => Some('X'),
-                        _ => unreachable!(),
-                    };
-                }
-            }
+
+    if let (Some(left_idx), Some(right_idx)) = (rule.find(left), rule.find(right)) {
+        if (left_idx as isize - right_idx as isize).abs() <= 1 && right_idx - left_idx == 1 {
+            return match left_idx {
+                0 => Some('|'),
+                3 => Some('Y'),
+                6 => Some('X'),
+                _ => unreachable!(),
+            };
         }
-        _ => {}
     }
 
-    return None;
+    None
 }
 
 // Hard blank smushing: smush two hard blanks into one
@@ -148,9 +142,14 @@ fn horz_smush_6(left: char, right: char, hard_blank: char) -> Option<char> {
 // -----------------------------------------------------------------------------
 //     - Horizontal smush -
 // -----------------------------------------------------------------------------
-pub(crate) fn horizontal_smush(left: &[String], right: &[String], overlap: usize, header: &Header) -> Vec<String> {
+pub(crate) fn horizontal_smush(
+    left: &[String],
+    right: &[String],
+    overlap: usize,
+    header: &Header,
+) -> Vec<String> {
     let _debug_str = format!("{:#?}", right);
-    let mut output: Vec<String> = vec!["".to_string();left.len()];
+    let mut output: Vec<String> = vec!["".to_string(); left.len()];
 
     for i in 0..header.height as usize {
         let left = &left[i];
@@ -172,14 +171,14 @@ pub(crate) fn horizontal_smush(left: &[String], right: &[String], overlap: usize
             // var ch1 = (jj < len1) ? seg1.substr(jj,1) : " ";
             // ch1
             let left_char = if j < left.chars().count() {
-                seg1.chars().skip(j).next().unwrap()
+                seg1.chars().nth(j).unwrap()
             } else {
                 ' '
             };
 
             // ch2
             let right_char = if j < right.chars().count() {
-                seg2.chars().skip(j).next().unwrap()
+                seg2.chars().nth(j).unwrap()
             } else {
                 ' '
             };
@@ -199,44 +198,33 @@ pub(crate) fn horizontal_smush(left: &[String], right: &[String], overlap: usize
                     }
                 }
 
-                if next.is_none() {
-                    if header.old_layout.contains(OldLayout::HORZ_SMUSH_2) {
-                        if let Some(c) = horz_smush_2(left_char, right_char, header.hard_blank) {
-                            next = Some(c);
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_2) {
+                    if let Some(c) = horz_smush_2(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
                 }
 
-                if next.is_none() {
-                    if header.old_layout.contains(OldLayout::HORZ_SMUSH_3) {
-                        if let Some(c) = horz_smush_3(left_char, right_char, header.hard_blank) {
-                            next = Some(c);
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_3) {
+                    if let Some(c) = horz_smush_3(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
                 }
 
-                if next.is_none() {
-                    if header.old_layout.contains(OldLayout::HORZ_SMUSH_4) {
-                        if let Some(c) = horz_smush_4(left_char, right_char, header.hard_blank) {
-                            next = Some(c);
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_4) {
+                    if let Some(c) = horz_smush_4(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
                 }
 
-                if next.is_none() {
-                    if header.old_layout.contains(OldLayout::HORZ_SMUSH_5) {
-                        if let Some(c) = horz_smush_5(left_char, right_char, header.hard_blank) {
-                            next = Some(c);
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_5) {
+                    if let Some(c) = horz_smush_5(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
                 }
 
-
-                if next.is_none() {
-                    if header.old_layout.contains(OldLayout::HORZ_SMUSH_6) {
-                        if let Some(c) = horz_smush_6(left_char, right_char, header.hard_blank) {
-                            next = Some(c);
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_6) {
+                    if let Some(c) = horz_smush_6(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
                 }
 
@@ -263,12 +251,10 @@ pub(crate) fn horizontal_smush(left: &[String], right: &[String], overlap: usize
             let piece3 = &right[overlap..overlap + to.max(0) as usize];
             let _ = write!(&mut output[i], "{}", piece3);
         }
-
     }
 
     output
 }
-
 
 // -----------------------------------------------------------------------------
 //     - Horizontal smush length -
@@ -295,11 +281,10 @@ pub(crate) fn get_horizontal_smush_len(left: &str, right: &str, header: &Header)
         let right_seg = &right[..right.len().min(current_dist)];
 
         for i in 0..right.len().min(current_dist) {
-            let left_char = left_seg.chars().skip(i).next().unwrap();
-            let right_char = right_seg.chars().skip(i).next().unwrap();
+            let left_char = left_seg.chars().nth(i).unwrap();
+            let right_char = right_seg.chars().nth(i).unwrap();
 
             if left_char != ' ' && right_char != ' ' {
-
                 // if header.old_layout.contains(OldLayout::KERNING) {
                 //     current_dist -= 1;
                 //     break 'distcal;
@@ -307,65 +292,55 @@ pub(crate) fn get_horizontal_smush_len(left: &str, right: &str, header: &Header)
 
                 // TODO: add universal smushing. Requires FullLayout to be done
                 // else if UniversalSmushing  (only available in Full Layout)
-                    // if left_char == header.hard_blank || right_char == header.hard_blank
-                    //     current_dist -= 1;
-                    //
+                // if left_char == header.hard_blank || right_char == header.hard_blank
+                //     current_dist -= 1;
+                //
                 // end if UniversalSmushing
                 // else
-                    let mut next = None;
-                    break_now = true;
+                let mut next = None;
+                break_now = true;
 
-                    // Do all the smushing rules here
-                    if header.old_layout.contains(OldLayout::HORZ_SMUSH_1) {
-                        if let Some(c) = horz_smush_1(left_char, right_char, header.hard_blank) {
-                            next = Some(c);
-                        }
+                // Do all the smushing rules here
+                if header.old_layout.contains(OldLayout::HORZ_SMUSH_1) {
+                    if let Some(c) = horz_smush_1(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
+                }
 
-                    if next.is_none() {
-                        if header.old_layout.contains(OldLayout::HORZ_SMUSH_2) {
-                            if let Some(c) = horz_smush_2(left_char, right_char, header.hard_blank) {
-                                next = Some(c);
-                            }
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_2) {
+                    if let Some(c) = horz_smush_2(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
+                }
 
-                    if next.is_none() {
-                        if header.old_layout.contains(OldLayout::HORZ_SMUSH_3) {
-                            if let Some(c) = horz_smush_3(left_char, right_char, header.hard_blank) {
-                                next = Some(c);
-                            }
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_3) {
+                    if let Some(c) = horz_smush_3(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
+                }
 
-                    if next.is_none() {
-                        if header.old_layout.contains(OldLayout::HORZ_SMUSH_4) {
-                            if let Some(c) = horz_smush_4(left_char, right_char, header.hard_blank) {
-                                next = Some(c);
-                            }
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_4) {
+                    if let Some(c) = horz_smush_4(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
+                }
 
-                    if next.is_none() {
-                        if header.old_layout.contains(OldLayout::HORZ_SMUSH_5) {
-                            if let Some(c) = horz_smush_5(left_char, right_char, header.hard_blank) {
-                                next = Some(c);
-                            }
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_5) {
+                    if let Some(c) = horz_smush_5(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
+                }
 
-                    if next.is_none() {
-                        if header.old_layout.contains(OldLayout::HORZ_SMUSH_6) {
-                            if let Some(c) = horz_smush_6(left_char, right_char, header.hard_blank) {
-                                next = Some(c);
-                            }
-                        }
+                if next.is_none() && header.old_layout.contains(OldLayout::HORZ_SMUSH_6) {
+                    if let Some(c) = horz_smush_6(left_char, right_char, header.hard_blank) {
+                        next = Some(c);
                     }
+                }
 
-                    if next.is_none() {
-                        current_dist -= 1;
-                        break 'distcal;
-                    }
+                if next.is_none() {
+                    current_dist -= 1;
+                    break 'distcal;
+                }
             }
         }
 
@@ -378,6 +353,5 @@ pub(crate) fn get_horizontal_smush_len(left: &str, right: &str, header: &Header)
         }
     }
 
-    let overlap = max_dist.min(current_dist);
-    overlap
+    max_dist.min(current_dist)
 }

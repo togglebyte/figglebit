@@ -25,6 +25,7 @@ impl Char {
         };
 
         // Remove the end characters for each line
+        #[allow(clippy::clippy::suspicious_map)]
         lines.iter_mut().map(String::pop).count();
 
         // Make sure the last character is the same
