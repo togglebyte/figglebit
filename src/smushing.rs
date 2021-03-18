@@ -36,7 +36,7 @@ fn horz_smush_1(left: char, right: char, hard_blank: char) -> Option<char> {
 //     return false;
 // }
 
-fn horz_smush_2(left: char, right: char, hard_blank: char) -> Option<char> {
+fn horz_smush_2(left: char, right: char, _hard_blank: char) -> Option<char> {
     let rule2str = "|/\\[]{}()<>";
 
     if left == '_' && rule2str.contains(right) {
@@ -61,7 +61,7 @@ fn horz_smush_2(left: char, right: char, hard_blank: char) -> Option<char> {
 //     }
 //     return false;
 // }
-fn horz_smush_3(left: char, right: char, hard_blank: char) -> Option<char> {
+fn horz_smush_3(left: char, right: char, _hard_blank: char) -> Option<char> {
     let rule = "| /\\ [] {} () <>";
 
     match (rule.find(left), rule.find(right)) {
@@ -89,7 +89,7 @@ fn horz_smush_3(left: char, right: char, hard_blank: char) -> Option<char> {
 //     }
 //     return false;
 // }
-fn horz_smush_4(left: char, right: char, hard_blank: char) -> Option<char> {
+fn horz_smush_4(left: char, right: char, _hard_blank: char) -> Option<char> {
     let rule = "[] {} ()";
     match (rule.find(left), rule.find(right)) {
         (Some(left_idx), Some(right_idx)) => {
@@ -115,7 +115,7 @@ fn horz_smush_4(left: char, right: char, hard_blank: char) -> Option<char> {
 //     }
 //     return false;
 // }
-fn horz_smush_5(left: char, right: char, hard_blank: char) -> Option<char> {
+fn horz_smush_5(left: char, right: char, _hard_blank: char) -> Option<char> {
     let rule = "/\\ \\/ ><";
     match (rule.find(left), rule.find(right)) {
         (Some(left_idx), Some(right_idx)) => {
@@ -149,12 +149,12 @@ fn horz_smush_6(left: char, right: char, hard_blank: char) -> Option<char> {
 //     - Horizontal smush -
 // -----------------------------------------------------------------------------
 pub(crate) fn horizontal_smush(left: &[String], right: &[String], overlap: usize, header: &Header) -> Vec<String> {
-    let debug_str = format!("{:#?}", right);
+    let _debug_str = format!("{:#?}", right);
     let mut output: Vec<String> = vec!["".to_string();left.len()];
 
     for i in 0..header.height as usize {
-        let mut left = &left[i];
-        let mut right = &right[i];
+        let left = &left[i];
+        let right = &right[i];
 
         // NOTE: can this be a negative value?
         let overlap_start = (left.len() - overlap).max(0);
@@ -174,23 +174,23 @@ pub(crate) fn horizontal_smush(left: &[String], right: &[String], overlap: usize
             let left_char = if j < left.chars().count() {
                 seg1.chars().skip(j).next().unwrap()
             } else {
-                ' ' 
+                ' '
             };
 
             // ch2
             let right_char = if j < right.chars().count() {
                 seg2.chars().skip(j).next().unwrap()
             } else {
-                ' ' 
+                ' '
             };
 
             // Smushing will take place!
             if left_char != ' ' && right_char != ' ' {
-                // TODO: if FITTING layout 
+                // TODO: if FITTING layout
                 //     piece2 += uni_Smush(ch1, ch2, opts.hardBlank);
-                //   else if UNIVERSAL_SMUSHING 
+                //   else if UNIVERSAL_SMUSHING
                 //     piece2 += uni_Smush(ch1, ch2, opts.hardBlank);
-                //   else  
+                //   else
                 let mut next = None;
 
                 if header.old_layout.contains(OldLayout::HORZ_SMUSH_1) {
@@ -254,16 +254,16 @@ pub(crate) fn horizontal_smush(left: &[String], right: &[String], overlap: usize
             }
         }
 
-        write!(&mut output[i], "{}", piece1);
-        write!(&mut output[i], "{}", piece2);
+        let _ = write!(&mut output[i], "{}", piece1);
+        let _ = write!(&mut output[i], "{}", piece2);
 
         if overlap >= right.chars().count() {
         } else {
             let to = right.chars().count() as isize - overlap as isize;
             let piece3 = &right[overlap..overlap + to.max(0) as usize];
-            write!(&mut output[i], "{}", piece3);
+            let _ = write!(&mut output[i], "{}", piece3);
         }
-        
+
     }
 
     output
@@ -307,9 +307,9 @@ pub(crate) fn get_horizontal_smush_len(left: &str, right: &str, header: &Header)
 
                 // TODO: add universal smushing. Requires FullLayout to be done
                 // else if UniversalSmushing  (only available in Full Layout)
-                    // if left_char == header.hard_blank || right_char == header.hard_blank 
+                    // if left_char == header.hard_blank || right_char == header.hard_blank
                     //     current_dist -= 1;
-                    // 
+                    //
                 // end if UniversalSmushing
                 // else
                     let mut next = None;
@@ -374,7 +374,7 @@ pub(crate) fn get_horizontal_smush_len(left: &str, right: &str, header: &Header)
         }
         current_dist += 1;
         if current_dist == 5 {
-            let x = 1;
+            let _x = 1;
         }
     }
 
