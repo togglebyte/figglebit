@@ -25,9 +25,9 @@ fn raw_mode() -> Result<Stdout> {
     Ok(stdout)
 }
 
-struct CharData {
-    offset: usize,
-}
+// struct CharData {
+// offset: usize,
+// }
 
 pub struct Renderer {
     font: Font,
@@ -39,28 +39,33 @@ impl Renderer {
     }
 
     pub fn render<T: Write + ?Sized>(&self, text: &str, buf: &mut T) -> std::io::Result<usize> {
-        let mut chars = self.font.to_chars(text).into_iter().peekable();
+        let chars = self.font.to_chars(text).into_iter().peekable();
 
         let line_count = self.font.header.height as usize;
         let mut bytes_written = 0;
 
-        let mut overlap = 10_000;
+        let mut overlap;
         let mut output = vec!["".to_string(); line_count];
 
-        for (idx, c) in chars.enumerate() {
+        for (_idx, c) in chars.enumerate() {
             // TODO: in case of full width: just write each line, no need to do anything else
 
             overlap = 10_000;
-            for row in 0..line_count {
+            for (row, _val) in output.iter().enumerate().take(line_count) {
                 let next_overlap =
                     get_horizontal_smush_len(&output[row], &c.lines[row], &self.font.header);
                 overlap = overlap.min(next_overlap);
             }
+            // for row in 0..line_count {
+            //     let next_overlap =
+            //         get_horizontal_smush_len(&output[row], &c.lines[row], &self.font.header);
+            //     overlap = overlap.min(next_overlap);
+            // }
 
             output = horizontal_smush(&output, &c.lines, overlap, &self.font.header);
 
             // Replace hard blanks with space
-            output.iter_mut().for_each(|mut line| {
+            output.iter_mut().for_each(|line| {
                 *line = line.replace(self.font.header.hard_blank, " ");
             });
         }
@@ -88,7 +93,6 @@ pub fn cleanup(stdout: &mut Stdout) {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::io::Write;
 
     const FONT_DATA: &'static str = include_str!("../fonts/Slant.flf");
 
@@ -98,8 +102,8 @@ mod test {
 
     #[test]
     fn full_horizontal() {
-        let mut buf = Vec::new();
-        let renderer = Renderer::new(font());
+        let buf = Vec::new();
+        let _renderer = Renderer::new(font());
         let s = String::from_utf8(buf).unwrap();
         let expected = r#"
    ______

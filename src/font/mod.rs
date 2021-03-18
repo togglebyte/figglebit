@@ -36,7 +36,7 @@ pub struct Font {
 impl Font {
     pub fn to_chars(&self, s: &str) -> Vec<&Char> {
         s.as_bytes()
-            .into_iter()
+            .iter()
             .map(|b| (b - 32) as usize)
             .map(|i| &self.chars[i])
             .collect::<Vec<_>>()
