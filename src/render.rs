@@ -19,6 +19,9 @@ fn raw_mode() -> Result<Stdout> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     stdout.execute(EnterAlternateScreen)?;
+    #[cfg(target_os = "windows")]
+    execute!(stdout, EnableMouseCapture,)?;
+    #[cfg(not(target_os = "windows"))]
     execute!(stdout, DisableMouseCapture,)?;
     stdout.execute(cursor::Hide)?;
     stdout.execute(Clear(ClearType::All))?;
